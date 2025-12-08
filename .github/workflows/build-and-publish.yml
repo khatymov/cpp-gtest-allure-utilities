@@ -1,11 +1,10 @@
-name: Build and Publish Artifact
+name: Build & Release
 
 on:
   push:
-    branches: [ main, fix/replace-private-conan-deps ]
-  pull_request:
-    branches: [ main, fix/replace-private-conan-deps ]
-  workflow_dispatch: {}
+    tags:
+      - "v*"        # e.g. v1.0.0, v2.3.4
+  workflow_dispatch: {}  # optional: manual trigger
 
 jobs:
   build:
@@ -15,19 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python (for Conan v2, if needed)
+      - name: Set up Python (for Conan)
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Conan
         run: |
           pip install conan
           conan --version
 
-      - name: Configure Conan profile (optional)
-        run: |
-          conan profile detect --force
+      - name: Detect Conan profile
+        run: conan profile detect --force
 
       - name: Make build.sh executable
         run: chmod +x ./build.sh
@@ -35,10 +33,42 @@ jobs:
       - name: Run build script
         run: ./build.sh
 
-      # Upload the build directory as an artifact
+      # Pack the build output into a tar.gz
+      - name: Create release archive
+        run: |
+          mkdir -p dist
+          tar czf dist/GTestAllureUtilities-${{ github.ref_name }}.tar.gz build
+
+      # Upload the archive as a workflow artifact
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gtest-allure-utilities-build
-          path: build/
+          name: build-archive
+          path: dist/GTestAllureUtilities-${{ github.ref_name }}.tar.gz
           if-no-files-found: error
+
+  publish:
+    needs: build        # run only after build job succeeds
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-archive
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "GTestAllureUtilities ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          files: |
+            dist/GTestAllureUtilities-${{ github.ref_name }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
