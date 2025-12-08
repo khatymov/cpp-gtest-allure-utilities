@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GTestAllureUtilities/Model/TestProgram.h"
+#include "Model/TestProgram.h"
 #include "GTestAllureUtilities/Services/Report/ITestProgramJSONBuilder.h"
 
 

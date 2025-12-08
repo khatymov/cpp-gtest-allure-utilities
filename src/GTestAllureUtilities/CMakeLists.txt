@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.15)
 
 # Find external dependencides
 find_package(GTest)
-find_package(RapidJSONAdapter)
+# find_package(RapidJSONAdapter)
 
 # Configure preprocessor definitions
 add_compile_options(-D RAPIDJSON_HAS_STDSTRING=1)
@@ -14,8 +14,13 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(GTEST_ALLURE_UTILITIES GTestAllureUtilities)
 file(GLOB_RECURSE GTEST_ALLURE_UTILITIES_SRC "*.cpp")
 file(GLOB_RECURSE GTEST_ALLURE_UTILITIES_HDR "*.h")
+
 add_library(${GTEST_ALLURE_UTILITIES} STATIC ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR})
-target_link_libraries(${GTEST_ALLURE_UTILITIES} GTest::GTest RapidJSONAdapter::RapidJSONAdapter)
+
+add_subdirectory(interfaces)
+add_subdirectory(RapidJSONAdapter)
+
+target_link_libraries(${GTEST_ALLURE_UTILITIES} GTest::GTest RapidJSONAdapter)
 
 #Configure source groups
 foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR}) 

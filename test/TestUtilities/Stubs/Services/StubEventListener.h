@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GTestAllureUtilities/Model/Status.h"
+#include "Model/Status.h"
 #include "GTestAllureUtilities/Services/IServicesFactory.h"
 #include "GTestAllureUtilities/Services/EventHandlers/ITestCaseEndEventHandler.h"
 #include "GTestAllureUtilities/Services/EventHandlers/ITestCaseStartEventHandler.h"

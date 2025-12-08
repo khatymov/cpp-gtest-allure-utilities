@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "GTestAllureUtilities/Services/EventHandlers/TestStepEndEventHandler.h"
 
-#include "GTestAllureUtilities/Model/TestProgram.h"
-#include "GTestAllureUtilities/Model/Action.h"
+#include "Model/TestProgram.h"
+#include "Model/Action.h"
 
 #include "TestUtilities/Mocks/Services/System/MockTimeService.h"
 #include "TestUtilities/Mocks/Services/System/MockUUIDGeneratorService.h"

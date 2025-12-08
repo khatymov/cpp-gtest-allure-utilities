@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GTestAllureUtilities/Model/TestSuite.h"
+#include "Model/TestSuite.h"
 
 #include <gtest/gtest.h>
 #include <memory>

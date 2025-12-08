@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "StubServicesFactory.h"
 
-#include "GTestAllureUtilities/Model/TestProgram.h"
+#include "Model/TestProgram.h"
 #include "GTestAllureUtilities/Services/EventHandlers/TestCaseEndEventHandler.h"
 #include "GTestAllureUtilities/Services/EventHandlers/TestCaseStartEventHandler.h"
 #include "GTestAllureUtilities/Services/EventHandlers/TestProgramEndEventHandler.h"

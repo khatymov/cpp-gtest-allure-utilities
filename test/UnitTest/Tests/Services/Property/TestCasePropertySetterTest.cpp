@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "GTestAllureUtilities/Services/Property/TestCasePropertySetter.h"
 
-#include "GTestAllureUtilities/Model/TestProgram.h"
-#include "GTestAllureUtilities/Model/TestProperty.h"
+#include "Model/TestProgram.h"
+#include "Model/TestProperty.h"
 
 
 using namespace testing;
