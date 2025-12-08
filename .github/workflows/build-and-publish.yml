@@ -1,0 +1,44 @@
+name: Build and Publish Artifact
+
+on:
+  push:
+    branches: [ main, fix/replace-private-conan-deps ]
+  pull_request:
+    branches: [ main, fix/replace-private-conan-deps ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python (for Conan v2, if needed)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Conan
+        run: |
+          pip install conan
+          conan --version
+
+      - name: Configure Conan profile (optional)
+        run: |
+          conan profile detect --force
+
+      - name: Make build.sh executable
+        run: chmod +x ./build.sh
+
+      - name: Run build script
+        run: ./build.sh
+
+      # Upload the build directory as an artifact
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtest-allure-utilities-build
+          path: build/
+          if-no-files-found: error
