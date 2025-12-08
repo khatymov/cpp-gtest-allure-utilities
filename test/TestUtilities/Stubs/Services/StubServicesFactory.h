@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GTestAllureUtilities/Model/TestProgram.h"
+#include "Model/TestProgram.h"
 #include "TestUtilities/Mocks/Services/MockServicesFactory.h"
 
 

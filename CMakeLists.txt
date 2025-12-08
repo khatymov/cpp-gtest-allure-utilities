@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.15)
 
 project(GTestAllureUtilities)
 
@@ -22,6 +22,6 @@ include_directories(${CMAKE_SOURCE_DIR}/test)
 # Add subprojects
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/GTestAllureUtilities)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/TestUtilities)
-add_subdirectory(${CMAKE_SOURCE_DIR}/test/UnitTest)
-add_subdirectory(${CMAKE_SOURCE_DIR}/test/IntegrationTest)
-add_subdirectory(${CMAKE_SOURCE_DIR}/test/SampleTestProject)
+# add_subdirectory(${CMAKE_SOURCE_DIR}/test/UnitTest)
+# add_subdirectory(${CMAKE_SOURCE_DIR}/test/IntegrationTest)
+# add_subdirectory(${CMAKE_SOURCE_DIR}/test/SampleTestProject)

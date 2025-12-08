@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "GTestAllureUtilities/Services/Report/TestSuiteJSONSerializer.h"
 
-#include "GTestAllureUtilities/Model/Action.h"
-#include "GTestAllureUtilities/Model/ExpectedResult.h"
-#include "GTestAllureUtilities/Model/TestSuite.h"
+#include "Model/Action.h"
+#include "Model/ExpectedResult.h"
+#include "Model/TestSuite.h"
 
 #include "RapidJSONAdapter/JSONAdapter.h"
 #include "JSONAdapterTestUtilities/JSONAdapterUtilities.h"

@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "GTestAllureUtilities/Services/Report/TestProgramJSONBuilder.h"
 
-#include "GTestAllureUtilities/Model/TestSuite.h"
-#include "GTestAllureUtilities/Model/TestProgram.h"
+#include "Model/TestSuite.h"
+#include "Model/TestProgram.h"
 
 #include "TestUtilities/Mocks/Services/System/MockFileService.h"
 #include "TestUtilities/Mocks/Services/Report/MockTestSuiteJSONSerializer.h"

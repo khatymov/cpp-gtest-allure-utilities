@@ -10,6 +10,11 @@ file(GLOB_RECURSE SAMPLE_TEST_PROJECT_HDR "*.h")
 add_executable(${SAMPLE_TEST_PROJECT} ${SAMPLE_TEST_PROJECT_SRC} ${SAMPLE_TEST_PROJECT_HDR})
 target_link_libraries(${SAMPLE_TEST_PROJECT} GTestAllureUtilities)
 
+target_include_directories(${SAMPLE_TEST_PROJECT}
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/src/GTestAllureUtilities
+)
+
 # Ignored missing PDBs link warning on Visual Studio
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set_target_properties(${SAMPLE_TEST_PROJECT} PROPERTIES LINK_FLAGS "/ignore:4099")

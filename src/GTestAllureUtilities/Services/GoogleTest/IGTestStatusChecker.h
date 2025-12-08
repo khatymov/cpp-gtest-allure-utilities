@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GTestAllureUtilities/Model/Status.h"
+#include "Model/Status.h"
 
 #include <string>
 #include <stdexcept>

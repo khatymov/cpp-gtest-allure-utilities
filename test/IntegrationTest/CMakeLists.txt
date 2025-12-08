@@ -13,6 +13,11 @@ file(GLOB_RECURSE INTEGRATION_TEST_PROJECT_HDR "*.h")
 add_executable(${INTEGRATION_TEST_PROJECT} ${INTEGRATION_TEST_PROJECT_SRC} ${INTEGRATION_TEST_PROJECT_HDR})
 target_link_libraries(${INTEGRATION_TEST_PROJECT} GTestAllureUtilities TestUtilities JSONAdapterTestUtilities::JSONAdapterTestUtilities)
 
+target_include_directories(${INTEGRATION_TEST_PROJECT}
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/src/GTestAllureUtilities
+)
+
 # Ignored missing PDBs link warning on Visual Studio
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set_target_properties(${INTEGRATION_TEST_PROJECT} PROPERTIES LINK_FLAGS "/ignore:4099")
