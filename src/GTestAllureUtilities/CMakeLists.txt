@@ -22,6 +22,41 @@ add_subdirectory(RapidJSONAdapter)
 
 target_link_libraries(${GTEST_ALLURE_UTILITIES} GTest::GTest RapidJSONAdapter)
 
+target_include_directories(${GTEST_ALLURE_UTILITIES}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Model>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Services>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/RapidJSONAdapter>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/interfaces/JSONAdapterInterface>
+        $<INSTALL_INTERFACE:include/GTestAllureUtilities>
+)
+
+install(TARGETS ${GTEST_ALLURE_UTILITIES}
+    EXPORT GTestAllureUtilitiesTargets
+    ARCHIVE DESTINATION lib
+    INCLUDES DESTINATION include/GTestAllureUtilities
+)
+
+### NEW: install headers (public API)
+install(
+    FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/AllureAPI.h
+    DESTINATION include/GTestAllureUtilities
+)
+
+install(
+    DIRECTORY
+        Model
+        Services
+        RapidJSONAdapter
+        interfaces/JSONAdapterInterface
+    DESTINATION include/GTestAllureUtilities
+    FILES_MATCHING
+        PATTERN "*.h"
+)
+
+
 #Configure source groups
 foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR}) 
     get_filename_component(PARENT_DIR "${FILE}" DIRECTORY)
@@ -36,3 +71,5 @@ foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR})
 
     source_group("${GROUP}" FILES "${FILE}")
 endforeach()
+
+
