@@ -12,7 +12,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Adjust compilation flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=implicit-fallthrough")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=implicit-fallthrough")
 endif()
 
 # Configure include directories
@@ -21,7 +21,9 @@ include_directories(${CMAKE_SOURCE_DIR}/test)
 
 # Add subprojects
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/GTestAllureUtilities)
-add_subdirectory(${CMAKE_SOURCE_DIR}/test/TestUtilities)
-# add_subdirectory(${CMAKE_SOURCE_DIR}/test/UnitTest)
-# add_subdirectory(${CMAKE_SOURCE_DIR}/test/IntegrationTest)
-# add_subdirectory(${CMAKE_SOURCE_DIR}/test/SampleTestProject)
+    # add_subdirectory(${CMAKE_SOURCE_DIR}/test/TestUtilities)
+    # add_subdirectory(${CMAKE_SOURCE_DIR}/test/UnitTest)
+    # add_subdirectory(${CMAKE_SOURCE_DIR}/test/IntegrationTest)
+    # add_subdirectory(${CMAKE_SOURCE_DIR}/test/SampleTestProject)
+
+    

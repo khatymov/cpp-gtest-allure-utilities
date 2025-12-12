@@ -20,3 +20,7 @@ cd "${build_dir}" || exit $?
 # Build
 cmake .. -G "Ninja"  -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=${cmake_build_type} || exit $?
 cmake --build . || exit $?
+
+cmake --install . --prefix install || exit $?
+
+cpack --config CPackConfig.cmake
