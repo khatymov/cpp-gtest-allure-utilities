@@ -72,4 +72,4 @@ foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR})
     source_group("${GROUP}" FILES "${FILE}")
 endforeach()
 
-
+include(CPack)
