@@ -55,6 +55,7 @@ install(TARGETS ${GTEST_ALLURE_UTILITIES}
 install(
     FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/AllureAPI.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Allure2Listener.h
     DESTINATION include/GTestAllureUtilities
 )
 
