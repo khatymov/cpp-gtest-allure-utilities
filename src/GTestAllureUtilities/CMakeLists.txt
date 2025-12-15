@@ -32,6 +32,19 @@ target_include_directories(${GTEST_ALLURE_UTILITIES}
         $<INSTALL_INTERFACE:include/GTestAllureUtilities>
 )
 
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GTestAllureUtilitiesConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/GTestAllureUtilitiesConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/GTestAllureUtilities
+)
+
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/GTestAllureUtilitiesConfig.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/GTestAllureUtilities
+)
+
 install(TARGETS ${GTEST_ALLURE_UTILITIES}
     EXPORT GTestAllureUtilitiesTargets
     ARCHIVE DESTINATION lib
