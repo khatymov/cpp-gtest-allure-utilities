@@ -19,6 +19,7 @@ std::string g_tmsId;
 std::string g_tmsPattern;
 std::string g_epic;
 std::string g_severity;
+
 std::map<std::string, std::string> g_suiteLabels;
 
 // per-test (thread-local)
@@ -26,6 +27,10 @@ thread_local std::string tl_suite;
 thread_local std::string tl_case;
 thread_local std::string tl_uuid;
 thread_local std::vector<systelab::gtest_allure::AllureAPI::Step> tl_steps;
+thread_local std::vector<std::string> tl_tags;
+thread_local std::vector<systelab::gtest_allure::AllureAPI::Attachment> tl_attachments;
+thread_local std::vector<systelab::gtest_allure::AllureAPI::Parameter> tl_parameters;
+
 
 static long long nowMs() {
   using namespace std::chrono;
@@ -234,6 +239,29 @@ std::string AllureAPI::formatTMSLink(const std::string &tmsId) {
 
   return g_tmsPattern.substr(0, pos) + tmsId +
          g_tmsPattern.substr(pos + needle.size());
+}
+void AllureAPI::addTag(const std::string& tag) {
+  tl_tags.push_back(tag);
+}
+
+const std::vector<std::string>& AllureAPI::getTags() {
+  return tl_tags;
+}
+
+void AllureAPI::addAttachment(const std::string& name, const std::string& source, const std::string& type) {
+  tl_attachments.push_back(Attachment{name, source, type});
+}
+
+const std::vector<AllureAPI::Attachment>& AllureAPI::getAttachments() {
+  return tl_attachments;
+}
+
+void AllureAPI::addParameter(const std::string& name, const std::string& value) {
+  tl_parameters.push_back(Parameter{name, value});
+}
+
+const std::vector<AllureAPI::Parameter>& AllureAPI::getParameters() {
+  return tl_parameters;
 }
 
 service::IServicesFactory *AllureAPI::getServicesFactory() {
