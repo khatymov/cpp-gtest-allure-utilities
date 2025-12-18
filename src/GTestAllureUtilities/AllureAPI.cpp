@@ -17,6 +17,7 @@ std::mutex g_mutex;
 std::string g_outputFolder = "allure-results";
 std::string g_tmsId;
 std::string g_tmsPattern;
+std::string g_description;
 std::string g_epic;
 std::string g_severity;
 
@@ -114,6 +115,10 @@ void AllureAPI::setTestSuiteName(const std::string &name) {
 }
 
 void AllureAPI::setTestSuiteDescription(const std::string &description) {
+    {
+    std::lock_guard<std::mutex> lk(g_mutex);
+    g_description = description;
+  }
   setTestSuiteLabel(model::test_property::FEATURE_PROPERTY, description);
 }
 
@@ -145,6 +150,11 @@ void AllureAPI::setTestSuiteLabel(const std::string &name,
 }
 
 void AllureAPI::setTestCaseName(const std::string &name) {
+  {
+    std::lock_guard<std::mutex> lk(g_mutex);
+    tl_case = name;
+  }
+
   auto testCasePropertySetter =
       getServicesFactory()->buildTestCasePropertySetter();
   testCasePropertySetter->setProperty(model::test_property::NAME_PROPERTY,
@@ -204,11 +214,18 @@ std::string AllureAPI::getOutputFolder() {
 
 std::string AllureAPI::getCurrentTestSuiteName() { return tl_suite; }
 
-std::string AllureAPI::getCurrentTestCaseName() { return tl_case; }
+std::string AllureAPI::getCurrentTestCaseName() { 
+  return tl_case; 
+}
 
 std::string AllureAPI::getTMSId() {
   std::lock_guard<std::mutex> lk(g_mutex);
   return g_tmsId;
+}
+
+std::string AllureAPI::getDescription() {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  return g_description;
 }
 
 std::string AllureAPI::getTestSuiteEpic() {

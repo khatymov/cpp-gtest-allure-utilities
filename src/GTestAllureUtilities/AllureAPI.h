@@ -57,6 +57,7 @@ public:
   static std::string getTMSId();
   static std::string getTestSuiteEpic();
   static std::string getTestSuiteSeverity();
+  static std::string getDescription();
   static const std::map<std::string, std::string> &getTestSuiteLabels();
 
   static const std::vector<Step> &getSteps();
