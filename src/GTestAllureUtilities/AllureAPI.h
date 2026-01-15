@@ -48,7 +48,6 @@ public:
   static void endTestCase();
 
   // ===== Allure2Listener getters =====
-  // ===== Allure2Listener getters =====
   static std::string getOutputFolder();
 
   static std::string getCurrentTestSuiteName();
@@ -100,6 +99,7 @@ private:
   static void addStep(const std::string &name, bool isAction,
                       std::function<void()>);
   static service::IServicesFactory *getServicesFactory();
+  static model::TestCase *getRunningTestCase();
 
 private:
   static model::TestProgram m_testProgram;

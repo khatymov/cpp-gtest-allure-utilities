@@ -23,12 +23,15 @@ namespace systelab { namespace gtest_allure { namespace model {
 		Stage getStage() const;
 		time_t getStart() const;
 		time_t getStop() const;
+		const std::vector<std::string>& getTags() const;
 
 		void setName(const std::string&);
 		void setStatus(Status);
 		void setStage(Stage);
 		void setStart(time_t);
 		void setStop(time_t);
+		void addTag(const std::string&);
+		void clearTags();
 
 		unsigned int getStepCount() const;
 		const Step* getStep(unsigned int index) const;
@@ -46,6 +49,7 @@ namespace systelab { namespace gtest_allure { namespace model {
 		time_t m_start;
 		time_t m_stop;
 
+		std::vector<std::string> m_tags;
 		std::vector< std::unique_ptr<Step> > m_steps;
 	};
 

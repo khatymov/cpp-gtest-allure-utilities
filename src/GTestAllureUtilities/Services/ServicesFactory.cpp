@@ -118,7 +118,8 @@ namespace systelab { namespace gtest_allure { namespace service {
 	{
 		auto testSuiteJSONSerializer = buildTestSuiteJSONSerializer();
 		auto fileService = buildFileService();
-		return std::make_unique<TestProgramJSONBuilder>(std::move(testSuiteJSONSerializer), std::move(fileService));
+		auto uuidGeneratorService = buildUUIDGeneratorService();
+		return std::make_unique<TestProgramJSONBuilder>(std::move(testSuiteJSONSerializer), std::move(fileService), std::move(uuidGeneratorService));
 	}
 
 	std::unique_ptr<ITestSuiteJSONSerializer> ServicesFactory::buildTestSuiteJSONSerializer() const

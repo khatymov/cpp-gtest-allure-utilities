@@ -9,6 +9,7 @@ namespace systelab { namespace gtest_allure { namespace model {
 		,m_stage(Stage::PENDING)
 		,m_start(0)
 		,m_stop(0)
+		,m_tags()
 		,m_steps()
 	{
 	}
@@ -19,6 +20,7 @@ namespace systelab { namespace gtest_allure { namespace model {
 		,m_stage(other.m_stage)
 		,m_start(other.m_start)
 		,m_stop(other.m_stop)
+		,m_tags(other.m_tags)
 		,m_steps()
 	{
 		for (const auto& step : other.m_steps)
@@ -52,6 +54,11 @@ namespace systelab { namespace gtest_allure { namespace model {
 		return m_stop;
 	}
 
+	const std::vector<std::string>& TestCase::getTags() const
+	{
+		return m_tags;
+	}
+
 	void TestCase::setName(const std::string& name)
 	{
 		m_name = name;
@@ -75,6 +82,16 @@ namespace systelab { namespace gtest_allure { namespace model {
 	void TestCase::setStop(time_t stop)
 	{
 		m_stop = stop;
+	}
+
+	void TestCase::addTag(const std::string& tag)
+	{
+		m_tags.push_back(tag);
+	}
+
+	void TestCase::clearTags()
+	{
+		m_tags.clear();
 	}
 
 	unsigned int TestCase::getStepCount() const
@@ -104,6 +121,7 @@ namespace systelab { namespace gtest_allure { namespace model {
 		m_stage = other.m_stage;
 		m_start = other.m_start;
 		m_stop = other.m_stop;
+		m_tags = other.m_tags;
 
 		m_steps = std::vector< std::unique_ptr<Step> >();
 		for (const auto& step : other.m_steps)
@@ -121,6 +139,7 @@ namespace systelab { namespace gtest_allure { namespace model {
 			(lhs.m_stage != rhs.m_stage) &&
 			(lhs.m_start != rhs.m_start) &&
 			(lhs.m_stop != rhs.m_stop) &&
+			(lhs.m_tags != rhs.m_tags) &&
 			(lhs.m_steps.size() != rhs.m_steps.size()))
 		{
 			return false;
