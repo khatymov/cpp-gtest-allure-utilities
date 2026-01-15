@@ -31,6 +31,11 @@ public:
     std::string value;
   };
 
+  struct Label {
+    std::string name;
+    std::string value;
+  };
+
   struct Step {
     std::string name;
     std::string status;
@@ -85,6 +90,10 @@ public:
   // tags
   static void addTag(const std::string &tag);
   static const std::vector<std::string> &getTags();
+
+  // labels
+  static void addLabel(const std::string &name, const std::string &value);
+  static const std::vector<Label> &getLabels();
 
   // attachments
   static void addAttachment(const std::string &name, const std::string &type,
