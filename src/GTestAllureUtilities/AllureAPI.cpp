@@ -17,8 +17,10 @@ std::mutex g_mutex;
 std::string g_outputFolder = "allure-results";
 std::string g_tmsId;
 std::string g_tmsPattern;
+std::string g_description;
 std::string g_epic;
 std::string g_severity;
+
 std::map<std::string, std::string> g_suiteLabels;
 
 // per-test (thread-local)
@@ -27,6 +29,9 @@ thread_local std::string tl_case;
 thread_local std::string tl_uuid;
 thread_local std::vector<systelab::gtest_allure::AllureAPI::Step> tl_steps;
 thread_local std::vector<std::string> tl_tags;
+thread_local std::vector<systelab::gtest_allure::AllureAPI::Attachment> tl_attachments;
+thread_local std::vector<systelab::gtest_allure::AllureAPI::Parameter> tl_parameters;
+
 
 static long long nowMs() {
   using namespace std::chrono;
@@ -112,6 +117,10 @@ void AllureAPI::setTestSuiteName(const std::string &name) {
 }
 
 void AllureAPI::setTestSuiteDescription(const std::string &description) {
+    {
+    std::lock_guard<std::mutex> lk(g_mutex);
+    g_description = description;
+  }
   setTestSuiteLabel(model::test_property::FEATURE_PROPERTY, description);
 }
 
@@ -143,6 +152,11 @@ void AllureAPI::setTestSuiteLabel(const std::string &name,
 }
 
 void AllureAPI::setTestCaseName(const std::string &name) {
+  {
+    std::lock_guard<std::mutex> lk(g_mutex);
+    tl_case = name;
+  }
+
   auto testCasePropertySetter =
       getServicesFactory()->buildTestCasePropertySetter();
   testCasePropertySetter->setProperty(model::test_property::NAME_PROPERTY,
@@ -213,11 +227,18 @@ std::string AllureAPI::getOutputFolder() {
 
 std::string AllureAPI::getCurrentTestSuiteName() { return tl_suite; }
 
-std::string AllureAPI::getCurrentTestCaseName() { return tl_case; }
+std::string AllureAPI::getCurrentTestCaseName() { 
+  return tl_case; 
+}
 
 std::string AllureAPI::getTMSId() {
   std::lock_guard<std::mutex> lk(g_mutex);
   return g_tmsId;
+}
+
+std::string AllureAPI::getDescription() {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  return g_description;
 }
 
 std::string AllureAPI::getTestSuiteEpic() {
@@ -248,6 +269,29 @@ std::string AllureAPI::formatTMSLink(const std::string &tmsId) {
 
   return g_tmsPattern.substr(0, pos) + tmsId +
          g_tmsPattern.substr(pos + needle.size());
+}
+void AllureAPI::addTag(const std::string& tag) {
+  tl_tags.push_back(tag);
+}
+
+const std::vector<std::string>& AllureAPI::getTags() {
+  return tl_tags;
+}
+
+void AllureAPI::addAttachment(const std::string& name, const std::string& source, const std::string& type) {
+  tl_attachments.push_back(Attachment{name, source, type});
+}
+
+const std::vector<AllureAPI::Attachment>& AllureAPI::getAttachments() {
+  return tl_attachments;
+}
+
+void AllureAPI::addParameter(const std::string& name, const std::string& value) {
+  tl_parameters.push_back(Parameter{name, value});
+}
+
+const std::vector<AllureAPI::Parameter>& AllureAPI::getParameters() {
+  return tl_parameters;
 }
 
 service::IServicesFactory *AllureAPI::getServicesFactory() {
