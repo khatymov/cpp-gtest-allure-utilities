@@ -146,7 +146,6 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
     doc.AddMember("fullName", rapidjson::Value(fullName.c_str(), alloc), alloc);
     doc.AddMember("historyId", rapidjson::Value(historyId.c_str(), alloc), alloc);
     doc.AddMember("testCaseId", rapidjson::Value(fullName.c_str(), alloc), alloc);
-    doc.AddMember("description", rapidjson::Value(description.c_str(), alloc), alloc);
 
     doc.AddMember("status", rapidjson::Value(statusFromGTest(r), alloc), alloc);
     doc.AddMember("stage", rapidjson::Value("finished", alloc), alloc);
@@ -164,6 +163,8 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
     const auto itSuiteName = suiteLabels.find(model::test_property::NAME_PROPERTY);
     const std::string suiteLabelValue =
         (itSuiteName != suiteLabels.end()) ? itSuiteName->second : suite;
+
+    doc.AddMember("description", rapidjson::Value(description.c_str(), alloc), alloc);
 
     rapidjson::Value labels(rapidjson::kArrayType);
     addLabel(labels, alloc, "suite", suiteLabelValue);
