@@ -6,7 +6,6 @@
 
 #include "TestUtilities/Mocks/Services/System/MockFileService.h"
 #include "TestUtilities/Mocks/Services/Report/MockTestSuiteJSONSerializer.h"
-#include "TestUtilities/Mocks/Services/System/MockUUIDGeneratorService.h"
 
 
 using namespace testing;
@@ -22,36 +21,24 @@ namespace systelab { namespace gtest_allure_utilities { namespace unit_test {
 			m_testProgram = buildTestProgram();
 			auto testSuiteJSONSerializer = buildTestSuiteJSONSerializer();
 			auto fileService = buildFileService();
-			auto uuidGeneratorService = buildUUIDGeneratorService();
 
-			m_service = std::make_unique<service::TestProgramJSONBuilder>(std::move(testSuiteJSONSerializer),
-																		 std::move(fileService),
-																		 std::move(uuidGeneratorService));
+			m_service = std::make_unique<service::TestProgramJSONBuilder>(std::move(testSuiteJSONSerializer), std::move(fileService));
 		}
 
 		std::unique_ptr<model::TestProgram> buildTestProgram()
 		{
 			m_testProgramName = "MyTestProgram";
-			m_outputFolder = "TestProgramJSONBuilderTest/Reports";
+			m_outputFolder = "TestProgramJSONBuilderTest\\Reports";
 			m_testSuiteUUIDs = { "UUID1", "UUID2", "UUID3" };
-			m_testSuiteTestCaseCount = { 2, 1, 0 };
 
 			auto testProgram = std::make_unique<model::TestProgram>();
 			testProgram->setName(m_testProgramName);
 			testProgram->setOutputFolder(m_outputFolder);
 
-			for (size_t suiteIndex = 0; suiteIndex < m_testSuiteUUIDs.size(); ++suiteIndex)
+			for (auto& testSuiteUUID : m_testSuiteUUIDs)
 			{
 				model::TestSuite testSuite;
-				testSuite.setUUID(m_testSuiteUUIDs[suiteIndex]);
-
-				for (unsigned int testCaseIndex = 0; testCaseIndex < m_testSuiteTestCaseCount[suiteIndex]; ++testCaseIndex)
-				{
-					model::TestCase testCase;
-					testCase.setName("TestCase_" + std::to_string(suiteIndex) + "_" + std::to_string(testCaseIndex));
-					testSuite.addTestCase(testCase);
-				}
-
+				testSuite.setUUID(testSuiteUUID);
 				testProgram->addTestSuite(testSuite);
 			}
 
@@ -80,45 +67,24 @@ namespace systelab { namespace gtest_allure_utilities { namespace unit_test {
 			return fileService;
 		}
 
-		std::unique_ptr<service::IUUIDGeneratorService> buildUUIDGeneratorService()
-		{
-			auto uuidGeneratorService = std::make_unique<MockUUIDGeneratorService>();
-			m_uuidGeneratorService = uuidGeneratorService.get();
-			return uuidGeneratorService;
-		}
-
 	protected:
 		std::unique_ptr<service::TestProgramJSONBuilder> m_service;
 		MockTestSuiteJSONSerializer* m_testSuiteJSONSerializer;
 		MockFileService* m_fileService;
-		MockUUIDGeneratorService* m_uuidGeneratorService;
 
 		std::unique_ptr<model::TestProgram> m_testProgram;
 		std::string m_testProgramName;
 		std::string m_outputFolder;
 		std::vector <std::string> m_testSuiteUUIDs;
-		std::vector<unsigned int> m_testSuiteTestCaseCount;
-		std::vector<std::string> m_expectedTestCaseUUIDs = { "CaseUUID-1", "CaseUUID-2", "CaseUUID-3" };
 	};
 
 
 	TEST_F(TestProgramJSONBuilderTest, testBuildJSONFilesSavesAFileForEachTestCase)
 	{
-		size_t expectedFileCount = 0;
-		for (auto count : m_testSuiteTestCaseCount)
+		for (const auto& testSuiteUUID : m_testSuiteUUIDs)
 		{
-			expectedFileCount += count;
-		}
-		ASSERT_EQ(m_expectedTestCaseUUIDs.size(), expectedFileCount);
-
-		::testing::InSequence seq;
-		for (const auto& testCaseUUID : m_expectedTestCaseUUIDs)
-		{
-			EXPECT_CALL(*m_uuidGeneratorService, generateUUID())
-				.WillOnce(Return(testCaseUUID));
-
-			std::string expectedFilepath = m_outputFolder + "/" + testCaseUUID + "-" + "results" + ".json";
-			std::string expectedFileContent = "Serialized" + testCaseUUID;
+			std::string expectedFilepath = m_outputFolder + "\\" + testSuiteUUID + "-" + m_testProgramName + ".json";
+			std::string expectedFileContent = "Serialized" + testSuiteUUID;
 			EXPECT_CALL(*m_fileService, saveFile(expectedFilepath, expectedFileContent));
 		}
 
@@ -128,7 +94,6 @@ namespace systelab { namespace gtest_allure_utilities { namespace unit_test {
 	TEST_F(TestProgramJSONBuilderTest, testBuildJSONFilesDoesNotSaveAFileWhenSuiteHasNoTestCases)
 	{
 		EXPECT_CALL(*m_fileService, saveFile(_, _)).Times(0);
-		EXPECT_CALL(*m_uuidGeneratorService, generateUUID()).Times(0);
 
 		model::TestProgram emptyTestProgram;
 		m_service->buildJSONFiles(emptyTestProgram);
