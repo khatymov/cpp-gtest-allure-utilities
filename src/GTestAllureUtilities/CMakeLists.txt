@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
+include(GNUInstallDirs)
+
 # Find external dependencides
 find_package(GTest)
 # find_package(RapidJSONAdapter)
@@ -68,6 +70,13 @@ install(
     DESTINATION include/GTestAllureUtilities
     FILES_MATCHING
         PATTERN "*.h"
+)
+
+install(
+    EXPORT GTestAllureUtilitiesTargets
+    FILE GTestAllureUtilitiesTargets.cmake
+    NAMESPACE GTestAllureUtilities::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/GTestAllureUtilities
 )
 
 
