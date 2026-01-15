@@ -21,6 +21,7 @@ std::string g_epic;
 std::string g_severity;
 std::string g_description;
 std::map<std::string, std::string> g_suiteLabels;
+bool g_generateLegacyResults = true;
 
 // per-test (thread-local)
 thread_local std::string tl_suite;
@@ -102,6 +103,16 @@ void AllureAPI::setTMSLinksPattern(const std::string &tmsLinkPattern) {
 
 void AllureAPI::setFormat(model::Format format) {
   m_testProgram.setFormat(format);
+}
+
+void AllureAPI::setGenerateLegacyResults(bool enable) {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  g_generateLegacyResults = enable;
+}
+
+bool AllureAPI::getGenerateLegacyResults() {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  return g_generateLegacyResults;
 }
 
 void AllureAPI::setTMSId(const std::string &value) {

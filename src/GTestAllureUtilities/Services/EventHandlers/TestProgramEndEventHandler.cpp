@@ -1,5 +1,7 @@
 #include "TestProgramEndEventHandler.h"
 
+#include "AllureAPI.h"
+
 #include "Model/TestProgram.h"
 #include "Services/Report/ITestProgramJSONBuilder.h"
 
@@ -15,6 +17,10 @@ namespace systelab { namespace gtest_allure { namespace service {
 
 	void TestProgramEndEventHandler::handleTestProgramEnd() const
 	{
+		if (!gtest_allure::AllureAPI::getGenerateLegacyResults())
+		{
+			return;
+		}
 		m_testProgramJSONBuilderService->buildJSONFiles(m_testProgram);
 	}
 

@@ -74,6 +74,8 @@ public:
   static void setOutputFolder(const std::string &);
   static void setTMSLinksPattern(const std::string &);
   static void setFormat(model::Format format);
+  static void setGenerateLegacyResults(bool enable);
+  static bool getGenerateLegacyResults();
 
   static void setTMSId(const std::string &);
   static void setTestSuiteName(const std::string &);

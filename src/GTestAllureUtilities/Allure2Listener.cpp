@@ -75,6 +75,11 @@ static void addLabel(rapidjson::Value& labels, rapidjson::Document::AllocatorTyp
     labels.PushBack(l, alloc);
 }
 
+Allure2Listener::Allure2Listener()
+{
+    AllureAPI::setGenerateLegacyResults(false);
+}
+
 long long Allure2Listener::nowMs()
 {
     using namespace std::chrono;
@@ -141,6 +146,7 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
     doc.AddMember("fullName", rapidjson::Value(fullName.c_str(), alloc), alloc);
     doc.AddMember("historyId", rapidjson::Value(historyId.c_str(), alloc), alloc);
     doc.AddMember("testCaseId", rapidjson::Value(fullName.c_str(), alloc), alloc);
+    doc.AddMember("description", rapidjson::Value(description.c_str(), alloc), alloc);
 
     doc.AddMember("status", rapidjson::Value(statusFromGTest(r), alloc), alloc);
     doc.AddMember("stage", rapidjson::Value("finished", alloc), alloc);
@@ -185,13 +191,8 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
     addLabel(labels, alloc, "thread", getThreadLabel(host));
     addLabel(labels, alloc, "framework", "gtest");
     addLabel(labels, alloc, "language", "cpp");
-    addLabel(labels, alloc, "package", suite);
-    addLabel(labels, alloc, "testClass", suite);
-    addLabel(labels, alloc, "testMethod", name);
 
     doc.AddMember("labels", labels, alloc);
-
-    doc.AddMember("description", rapidjson::Value(description.c_str(), alloc), alloc);
 
     const auto tmsId = AllureAPI::getTMSId();
     {
