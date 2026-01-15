@@ -26,6 +26,7 @@ thread_local std::string tl_suite;
 thread_local std::string tl_case;
 thread_local std::string tl_uuid;
 thread_local std::vector<systelab::gtest_allure::AllureAPI::Step> tl_steps;
+thread_local std::vector<std::string> tl_tags;
 
 static long long nowMs() {
   using namespace std::chrono;
@@ -45,6 +46,7 @@ void AllureAPI::beginTestCase(const std::string &suiteName,
                               const std::string &gtestName,
                               const std::string &uuid) {
   tl_steps.clear();
+  tl_tags.clear();
   tl_uuid = uuid;
 
   // suite can be overridden globally by setTestSuiteName if you have it;
@@ -61,6 +63,7 @@ void AllureAPI::endTestCase() {
   tl_suite.clear();
   tl_uuid.clear();
   tl_steps.clear();
+  tl_tags.clear();
 }
 
 std::unique_ptr<::testing::TestEventListener> AllureAPI::buildListener() {
@@ -156,6 +159,17 @@ void AllureAPI::addExpectedResult(const std::string &name,
   addStep(name, false, verificationFunction);
 }
 
+void AllureAPI::addTag(const std::string &tag) {
+  tl_tags.push_back(tag);
+
+  auto *testCase = getRunningTestCase();
+  if (testCase) {
+    testCase->addTag(tag);
+  }
+}
+
+const std::vector<std::string> &AllureAPI::getTags() { return tl_tags; }
+
 void AllureAPI::addStep(const std::string &name, bool isAction,
                         std::function<void()> stepFunction) {
   Step s;
@@ -244,6 +258,25 @@ service::IServicesFactory *AllureAPI::getServicesFactory() {
   } else {
     return m_servicesFactory;
   }
+}
+
+model::TestCase *AllureAPI::getRunningTestCase() {
+  unsigned int nTestSuites =
+      static_cast<unsigned int>(m_testProgram.getTestSuitesCount());
+  for (unsigned int i = 0; i < nTestSuites; i++) {
+    model::TestSuite &testSuite = m_testProgram.getTestSuite(i);
+    if (testSuite.getStage() != model::Stage::RUNNING) {
+      continue;
+    }
+
+    for (model::TestCase &testCase : testSuite.getTestCases()) {
+      if (testCase.getStage() == model::Stage::RUNNING) {
+        return &testCase;
+      }
+    }
+  }
+
+  return nullptr;
 }
 
 } // namespace gtest_allure

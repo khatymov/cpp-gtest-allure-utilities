@@ -98,6 +98,7 @@ namespace systelab { namespace gtest_allure { namespace service {
 				jsonTestCase->addMember("start", testCase.getStart());
 				jsonTestCase->addMember("stop", testCase.getStop());
 
+				addTestCaseLabelsToJSON(testCase, *jsonTestCase);
 				addTestCaseStepsToJSON(testCase, *jsonTestCase);
 
 				jsonTestCasesArray->addArrayValue(std::move(jsonTestCase));
@@ -130,6 +131,26 @@ namespace systelab { namespace gtest_allure { namespace service {
 
 			jsonParent.addMember("steps", std::move(jsonStepsArray));
 		}
+	}
+
+	void TestSuiteJSONSerializer::addTestCaseLabelsToJSON(const model::TestCase& testCase, json::IJSONValue& jsonParent) const
+	{
+		const auto& tags = testCase.getTags();
+		if (tags.empty())
+		{
+			return;
+		}
+
+		auto jsonLabelsArray = jsonParent.buildValue(json::ARRAY_TYPE);
+		for (const auto& tag : tags)
+		{
+			auto jsonLabel = jsonParent.buildValue(json::OBJECT_TYPE);
+			jsonLabel->addMember("name", "tag");
+			jsonLabel->addMember("value", tag);
+			jsonLabelsArray->addArrayValue(std::move(jsonLabel));
+		}
+
+		jsonParent.addMember("labels", std::move(jsonLabelsArray));
 	}
 
 	std::string TestSuiteJSONSerializer::translateStatusToString(model::Status status) const

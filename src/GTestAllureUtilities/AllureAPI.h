@@ -20,11 +20,25 @@ class IServicesFactory;
 
 class AllureAPI {
 public:
+  struct Attachment {
+    std::string name;
+    std::string source;
+    std::string type;
+  };
+
+  struct Parameter {
+    std::string name;
+    std::string value;
+  };
+
   struct Step {
     std::string name;
-    std::string status; // "passed"/"failed"/"broken"/"skipped"
+    std::string status;
     long long startMs{};
     long long stopMs{};
+
+    std::vector<Attachment> attachments;
+    std::vector<Parameter> parameters;
   };
 
   // Allure2Listener support
@@ -34,7 +48,6 @@ public:
   static void endTestCase();
 
   // ===== Allure2Listener getters =====
-  // ===== Allure2Listener getters =====
   static std::string getOutputFolder();
 
   static std::string getCurrentTestSuiteName();
@@ -43,6 +56,7 @@ public:
   static std::string getTMSId();
   static std::string getTestSuiteEpic();
   static std::string getTestSuiteSeverity();
+  static std::string getDescription();
   static const std::map<std::string, std::string> &getTestSuiteLabels();
 
   static const std::vector<Step> &getSteps();
@@ -68,10 +82,24 @@ public:
   static void addAction(const std::string &name, std::function<void()>);
   static void addExpectedResult(const std::string &name, std::function<void()>);
 
+  // tags
+  static void addTag(const std::string &tag);
+  static const std::vector<std::string> &getTags();
+
+  // attachments
+  static void addAttachment(const std::string &name, const std::string &type,
+                            const std::string &filePath);
+  static const std::vector<Attachment> &getAttachments();
+
+  // parameters
+  static void addParameter(const std::string &name, const std::string &value);
+  static const std::vector<Parameter> &getParameters();
+
 private:
   static void addStep(const std::string &name, bool isAction,
                       std::function<void()>);
   static service::IServicesFactory *getServicesFactory();
+  static model::TestCase *getRunningTestCase();
 
 private:
   static model::TestProgram m_testProgram;
