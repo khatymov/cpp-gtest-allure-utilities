@@ -19,6 +19,7 @@ std::string g_tmsId;
 std::string g_tmsPattern;
 std::string g_epic;
 std::string g_severity;
+std::string g_description;
 std::map<std::string, std::string> g_suiteLabels;
 
 // per-test (thread-local)
@@ -62,8 +63,7 @@ void AllureAPI::endTestCase() {
   tl_case.clear();
   tl_suite.clear();
   tl_uuid.clear();
-  tl_steps.clear();
-  tl_tags.clear();
+  // Steps/tags are cleared at beginTestCase so Allure2Listener can read them on test end.
 }
 
 std::unique_ptr<::testing::TestEventListener> AllureAPI::buildListener() {
@@ -112,6 +112,10 @@ void AllureAPI::setTestSuiteName(const std::string &name) {
 }
 
 void AllureAPI::setTestSuiteDescription(const std::string &description) {
+  {
+    std::lock_guard<std::mutex> lk(g_mutex);
+    g_description = description;
+  }
   setTestSuiteLabel(model::test_property::FEATURE_PROPERTY, description);
 }
 
@@ -228,6 +232,11 @@ std::string AllureAPI::getTestSuiteEpic() {
 std::string AllureAPI::getTestSuiteSeverity() {
   std::lock_guard<std::mutex> lk(g_mutex);
   return g_severity;
+}
+
+std::string AllureAPI::getDescription() {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  return g_description;
 }
 
 const std::map<std::string, std::string> &AllureAPI::getTestSuiteLabels() {

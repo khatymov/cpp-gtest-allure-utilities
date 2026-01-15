@@ -1,4 +1,6 @@
 #include "Allure2Listener.h"
+#include "AllureAPI.h"
+#include "Model/TestProperty.h"
 
 #include <chrono>
 #include <cstdint>
@@ -68,7 +70,7 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
     const int64_t stopMs = static_cast<int64_t>(nowMs());
     const auto& r = *testInfo.result();
 
-    const std::string outputDir = "allure-results";
+    const std::string outputDir = AllureAPI::getOutputFolder();
     fs::create_directories(outputDir);
 
     rapidjson::Document doc(rapidjson::kObjectType);
@@ -90,15 +92,106 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
     doc.AddMember("start", rapidjson::Value().SetInt64(tl_startMs), alloc);
     doc.AddMember("stop",  rapidjson::Value().SetInt64(stopMs),  alloc);
 
-    // Minimal label: suite
+    const auto& suiteLabels = AllureAPI::getTestSuiteLabels();
+    const auto& tags = AllureAPI::getTags();
+    const auto description = AllureAPI::getDescription();
+
+    const auto itSuiteName = suiteLabels.find(model::test_property::NAME_PROPERTY);
+    const std::string suiteLabelValue =
+        (itSuiteName != suiteLabels.end()) ? itSuiteName->second : suite;
+
     rapidjson::Value labels(rapidjson::kArrayType);
     {
         rapidjson::Value l(rapidjson::kObjectType);
         l.AddMember("name", rapidjson::Value("suite", alloc), alloc);
-        l.AddMember("value", rapidjson::Value(suite.c_str(), alloc), alloc);
+        l.AddMember("value", rapidjson::Value(suiteLabelValue.c_str(), alloc), alloc);
         labels.PushBack(l, alloc);
     }
+
+    for (const auto& [nameKey, value] : suiteLabels)
+    {
+        if (nameKey == model::test_property::NAME_PROPERTY)
+            continue;
+
+        rapidjson::Value l(rapidjson::kObjectType);
+        l.AddMember("name", rapidjson::Value(nameKey.c_str(), alloc), alloc);
+        l.AddMember("value", rapidjson::Value(value.c_str(), alloc), alloc);
+        labels.PushBack(l, alloc);
+    }
+
+    for (const auto& tag : tags)
+    {
+        rapidjson::Value l(rapidjson::kObjectType);
+        l.AddMember("name", rapidjson::Value("tag", alloc), alloc);
+        l.AddMember("value", rapidjson::Value(tag.c_str(), alloc), alloc);
+        labels.PushBack(l, alloc);
+    }
+
     doc.AddMember("labels", labels, alloc);
+
+    if (!description.empty())
+    {
+        doc.AddMember("description", rapidjson::Value(description.c_str(), alloc), alloc);
+    }
+
+    const auto tmsId = AllureAPI::getTMSId();
+    if (!tmsId.empty())
+    {
+        rapidjson::Value links(rapidjson::kArrayType);
+        rapidjson::Value l(rapidjson::kObjectType);
+        l.AddMember("type", rapidjson::Value("tms", alloc), alloc);
+        l.AddMember("name", rapidjson::Value(tmsId.c_str(), alloc), alloc);
+        const auto tmsLink = AllureAPI::formatTMSLink(tmsId);
+        if (!tmsLink.empty())
+            l.AddMember("url", rapidjson::Value(tmsLink.c_str(), alloc), alloc);
+        links.PushBack(l, alloc);
+        doc.AddMember("links", links, alloc);
+    }
+
+    const auto& steps = AllureAPI::getSteps();
+    if (!steps.empty())
+    {
+        rapidjson::Value stepsArray(rapidjson::kArrayType);
+        for (const auto& step : steps)
+        {
+            rapidjson::Value s(rapidjson::kObjectType);
+            s.AddMember("name", rapidjson::Value(step.name.c_str(), alloc), alloc);
+            s.AddMember("status", rapidjson::Value(step.status.c_str(), alloc), alloc);
+            s.AddMember("stage", rapidjson::Value("finished", alloc), alloc);
+            s.AddMember("start", rapidjson::Value().SetInt64(step.startMs), alloc);
+            s.AddMember("stop",  rapidjson::Value().SetInt64(step.stopMs),  alloc);
+
+            if (!step.parameters.empty())
+            {
+                rapidjson::Value params(rapidjson::kArrayType);
+                for (const auto& param : step.parameters)
+                {
+                    rapidjson::Value p(rapidjson::kObjectType);
+                    p.AddMember("name", rapidjson::Value(param.name.c_str(), alloc), alloc);
+                    p.AddMember("value", rapidjson::Value(param.value.c_str(), alloc), alloc);
+                    params.PushBack(p, alloc);
+                }
+                s.AddMember("parameters", params, alloc);
+            }
+
+            if (!step.attachments.empty())
+            {
+                rapidjson::Value attachments(rapidjson::kArrayType);
+                for (const auto& attachment : step.attachments)
+                {
+                    rapidjson::Value a(rapidjson::kObjectType);
+                    a.AddMember("name", rapidjson::Value(attachment.name.c_str(), alloc), alloc);
+                    a.AddMember("source", rapidjson::Value(attachment.source.c_str(), alloc), alloc);
+                    a.AddMember("type", rapidjson::Value(attachment.type.c_str(), alloc), alloc);
+                    attachments.PushBack(a, alloc);
+                }
+                s.AddMember("attachments", attachments, alloc);
+            }
+
+            stepsArray.PushBack(s, alloc);
+        }
+        doc.AddMember("steps", stepsArray, alloc);
+    }
 
     const fs::path outPath = fs::path(outputDir) / (tl_uuid + "-result.json");
 
