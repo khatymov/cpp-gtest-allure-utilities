@@ -61,7 +61,9 @@ void AllureAPI::beginTestCase(const std::string &suiteName,
 
   // suite can be overridden globally by setTestSuiteName if you have it;
   // here we just use what listener passes.
-  tl_suite = suiteName;
+  if (tl_suite.empty()) {
+    tl_suite = suiteName;
+  }
 
   // case name can be overridden by user calling setTestCaseName inside test
   if (tl_case.empty())

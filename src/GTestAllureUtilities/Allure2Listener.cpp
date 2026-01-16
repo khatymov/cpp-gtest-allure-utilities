@@ -114,6 +114,9 @@ void Allure2Listener::OnTestStart(const ::testing::TestInfo& /*testInfo*/)
 {
     tl_uuid = generateUuidV4();
     tl_startMs = static_cast<int64_t>(nowMs());
+    AllureAPI::beginTestCase(::testing::UnitTest::GetInstance()->current_test_suite()->name(),
+                             ::testing::UnitTest::GetInstance()->current_test_info()->name(),
+                             tl_uuid);
 }
 
 void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
@@ -300,6 +303,8 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
     std::ofstream f(outPath, std::ios::binary);
     f << buffer.GetString();
     f.close();
+
+    AllureAPI::endTestCase();
 }
 
 } // namespace systelab::gtest_allure
