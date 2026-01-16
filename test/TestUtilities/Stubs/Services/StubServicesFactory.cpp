@@ -144,8 +144,7 @@ namespace systelab { namespace gtest_allure { namespace test_utility {
 	{
 		auto fileService = buildFileService();
 		auto testSuiteJSONSerializer = buildTestSuiteJSONSerializer();
-		auto uuidGeneratorService = buildUUIDGeneratorService();
-		return new service::TestProgramJSONBuilder(std::move(testSuiteJSONSerializer), std::move(fileService), std::move(uuidGeneratorService));
+		return new service::TestProgramJSONBuilder(std::move(testSuiteJSONSerializer), std::move(fileService));
 	}
 
 	service::ITestSuiteJSONSerializer* StubServicesFactory::buildTestSuiteJSONSerializerStub() const
@@ -172,3 +171,4 @@ namespace systelab { namespace gtest_allure { namespace test_utility {
 	}
 
 }}}
+

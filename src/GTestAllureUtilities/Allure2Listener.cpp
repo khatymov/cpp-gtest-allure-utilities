@@ -1,4 +1,5 @@
 #include "Allure2Listener.h"
+
 #include "AllureAPI.h"
 #include "Model/TestProperty.h"
 
@@ -15,7 +16,10 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+
+#if defined(__unix__) || defined(__APPLE__)
 #include <unistd.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -51,18 +55,25 @@ static std::string toHex(uint64_t value)
 
 static std::string getHostName()
 {
+#if defined(__unix__) || defined(__APPLE__)
     char buffer[256] = {};
     if (gethostname(buffer, sizeof(buffer) - 1) == 0)
     {
         return std::string(buffer);
     }
+#endif
     return "unknown-host";
 }
 
 static std::string getThreadLabel(const std::string& host)
 {
     std::ostringstream os;
-    os << getpid() << "@" << host << "." << std::this_thread::get_id();
+#if defined(__unix__) || defined(__APPLE__)
+    os << getpid();
+#else
+    os << "0";
+#endif
+    os << "@" << host << "." << std::this_thread::get_id();
     return os.str();
 }
 
@@ -110,21 +121,24 @@ std::string Allure2Listener::generateUuidV4()
     return os.str();
 }
 
-void Allure2Listener::OnTestStart(const ::testing::TestInfo& /*testInfo*/)
+void Allure2Listener::OnTestStart(const ::testing::TestInfo& testInfo)
 {
     tl_uuid = generateUuidV4();
     tl_startMs = static_cast<int64_t>(nowMs());
-    AllureAPI::beginTestCase(::testing::UnitTest::GetInstance()->current_test_suite()->name(),
-                             ::testing::UnitTest::GetInstance()->current_test_info()->name(),
-                             tl_uuid);
+    AllureAPI::beginTestCase(testInfo.test_suite_name(), testInfo.name(), tl_uuid);
 }
 
 void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
 {
-    const int64_t stopMs = static_cast<int64_t>(nowMs());
+    int64_t stopMs = static_cast<int64_t>(nowMs());
+    if (stopMs <= tl_startMs)
+        stopMs = tl_startMs + 1;
+
     const auto& r = *testInfo.result();
 
-    const std::string outputDir = AllureAPI::getOutputFolder();
+    std::string outputDir = AllureAPI::getOutputFolder();
+    if (outputDir.empty())
+        outputDir = "allure-results";
     fs::create_directories(outputDir);
 
     rapidjson::Document doc(rapidjson::kObjectType);
@@ -141,7 +155,6 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
             ? testInfo.name()
             : AllureAPI::getCurrentTestCaseName();
     const std::string fullName = suite + "." + name;
-
     const std::string historyId = toHex(fnv1a64(fullName));
 
     doc.AddMember("historyId", rapidjson::Value(historyId.c_str(), alloc), alloc);
@@ -151,7 +164,6 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
 
     doc.AddMember("status", rapidjson::Value(statusFromGTest(r), alloc), alloc);
     doc.AddMember("stage", rapidjson::Value("finished", alloc), alloc);
-
 
     const auto& suiteLabels = AllureAPI::getTestSuiteLabels();
     const auto& tags = AllureAPI::getTags();
@@ -287,7 +299,7 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
             p.AddMember("value", rapidjson::Value(param.value.c_str(), alloc), alloc);
             paramsArray.PushBack(p, alloc);
         }
-    doc.AddMember("parameters", paramsArray, alloc);
+        doc.AddMember("parameters", paramsArray, alloc);
     }
 
     // Fix RapidJSON long long ambiguity:

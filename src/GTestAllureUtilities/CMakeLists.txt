@@ -2,17 +2,13 @@ cmake_minimum_required(VERSION 3.15)
 
 include(GNUInstallDirs)
 
-# Find external dependencides
+# Find external dependencies
 find_package(GTest)
-# find_package(RapidJSONAdapter)
 
-# Configure preprocessor definitions
 add_compile_options(-D RAPIDJSON_HAS_STDSTRING=1)
 
-# Add project folder into includes
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# Configure GTestAllureUtilities static library
 set(GTEST_ALLURE_UTILITIES GTestAllureUtilities)
 file(GLOB_RECURSE GTEST_ALLURE_UTILITIES_SRC "*.cpp")
 file(GLOB_RECURSE GTEST_ALLURE_UTILITIES_HDR "*.h")
@@ -34,26 +30,14 @@ target_include_directories(${GTEST_ALLURE_UTILITIES}
         $<INSTALL_INTERFACE:include/GTestAllureUtilities>
 )
 
-include(CMakePackageConfigHelpers)
-
-configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/GTestAllureUtilitiesConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/GTestAllureUtilitiesConfig.cmake
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/GTestAllureUtilities
-)
-
-install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/GTestAllureUtilitiesConfig.cmake
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/GTestAllureUtilities
-)
-
 install(TARGETS ${GTEST_ALLURE_UTILITIES}
     EXPORT GTestAllureUtilitiesTargets
-    ARCHIVE DESTINATION lib
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION include/GTestAllureUtilities
 )
 
-### NEW: install headers (public API)
 install(
     FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/AllureAPI.h
@@ -79,9 +63,8 @@ install(
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/GTestAllureUtilities
 )
 
-
 #Configure source groups
-foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR}) 
+foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR})
     get_filename_component(PARENT_DIR "${FILE}" DIRECTORY)
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
     string(REPLACE "/" "\\" GROUP "${GROUP}")

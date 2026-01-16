@@ -17,9 +17,9 @@ std::mutex g_mutex;
 std::string g_outputFolder = "allure-results";
 std::string g_tmsId;
 std::string g_tmsPattern;
+std::string g_description;
 std::string g_epic;
 std::string g_severity;
-std::string g_description;
 std::map<std::string, std::string> g_suiteLabels;
 bool g_generateLegacyResults = true;
 
@@ -74,7 +74,7 @@ void AllureAPI::endTestCase() {
   tl_case.clear();
   tl_suite.clear();
   tl_uuid.clear();
-  // Steps/tags are cleared at beginTestCase so Allure2Listener can read them on test end.
+  // Steps/tags are cleared at beginTestCase so Allure2Listener can read them.
 }
 
 std::unique_ptr<::testing::TestEventListener> AllureAPI::buildListener() {

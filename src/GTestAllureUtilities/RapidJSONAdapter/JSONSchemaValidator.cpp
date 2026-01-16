@@ -5,27 +5,6 @@
 
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
-#include <rapidjson/pointer.h>
-#include <type_traits>
-
-namespace {
-	using SchemaDocument = ::rapidjson::SchemaDocument;
-	using Document = ::rapidjson::Document;
-
-	template <typename ProviderT>
-	std::unique_ptr<SchemaDocument> makeSchemaDocument(Document& document, ProviderT* provider)
-	{
-		if constexpr (std::is_constructible_v<SchemaDocument, const Document&, ProviderT*, ::rapidjson::CrtAllocator*>)
-		{
-			return std::make_unique<SchemaDocument>(document, provider, nullptr);
-		}
-		else
-		{
-			SchemaDocument::PointerType pointer;
-			return std::make_unique<SchemaDocument>(document, "", 0, provider, nullptr, pointer);
-		}
-	}
-}
 
 
 namespace systelab { namespace json { namespace rapidjson {
@@ -70,7 +49,7 @@ namespace systelab { namespace json { namespace rapidjson {
 			return std::unique_ptr<::rapidjson::SchemaDocument>();
 		}
 
-		return makeSchemaDocument(jsonDocument, this);
+		return std::make_unique<::rapidjson::SchemaDocument>(jsonDocument, "", 0, this);
 	}
 
 
@@ -91,7 +70,7 @@ namespace systelab { namespace json { namespace rapidjson {
 		::rapidjson::Document jsonDocument;
 		jsonDocument.Parse(document.serialize());
 
-		m_schemaDocument = makeSchemaDocument(jsonDocument, m_rapidjsonRemoteSchemaProvider.get());
+		m_schemaDocument = std::make_unique<::rapidjson::SchemaDocument>(jsonDocument, "", 0, m_rapidjsonRemoteSchemaProvider.get());
 	}
 
 	JSONSchemaValidator::~JSONSchemaValidator() = default;
