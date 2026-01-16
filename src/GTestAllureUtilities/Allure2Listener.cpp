@@ -144,18 +144,14 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
 
     const std::string historyId = toHex(fnv1a64(fullName));
 
+    doc.AddMember("historyId", rapidjson::Value(historyId.c_str(), alloc), alloc);
     doc.AddMember("name", rapidjson::Value(name.c_str(), alloc), alloc);
     doc.AddMember("testCaseName", rapidjson::Value(name.c_str(), alloc), alloc);
     doc.AddMember("fullName", rapidjson::Value(fullName.c_str(), alloc), alloc);
-    doc.AddMember("historyId", rapidjson::Value(historyId.c_str(), alloc), alloc);
-    doc.AddMember("testCaseId", rapidjson::Value(fullName.c_str(), alloc), alloc);
 
     doc.AddMember("status", rapidjson::Value(statusFromGTest(r), alloc), alloc);
     doc.AddMember("stage", rapidjson::Value("finished", alloc), alloc);
 
-    // Fix RapidJSON long long ambiguity:
-    doc.AddMember("start", rapidjson::Value().SetInt64(tl_startMs), alloc);
-    doc.AddMember("stop",  rapidjson::Value().SetInt64(stopMs),  alloc);
 
     const auto& suiteLabels = AllureAPI::getTestSuiteLabels();
     const auto& tags = AllureAPI::getTags();
@@ -291,8 +287,12 @@ void Allure2Listener::OnTestEnd(const ::testing::TestInfo& testInfo)
             p.AddMember("value", rapidjson::Value(param.value.c_str(), alloc), alloc);
             paramsArray.PushBack(p, alloc);
         }
-        doc.AddMember("parameters", paramsArray, alloc);
+    doc.AddMember("parameters", paramsArray, alloc);
     }
+
+    // Fix RapidJSON long long ambiguity:
+    doc.AddMember("start", rapidjson::Value().SetInt64(tl_startMs), alloc);
+    doc.AddMember("stop",  rapidjson::Value().SetInt64(stopMs),  alloc);
 
     const fs::path outPath = fs::path(outputDir) / (tl_uuid + "-result.json");
 
