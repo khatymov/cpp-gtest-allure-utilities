@@ -19,8 +19,4 @@ install(DIRECTORY JSONAdapterInterface
         DESTINATION include)
 
 install(TARGETS JSONAdapterInterface
-        EXPORT JSONAdapterInterfaceTargets)
-
-install(EXPORT JSONAdapterInterfaceTargets
-        NAMESPACE JSONAdapter::
-        DESTINATION lib/cmake/JSONAdapterInterface)
+        EXPORT GTestAllureUtilitiesTargets)

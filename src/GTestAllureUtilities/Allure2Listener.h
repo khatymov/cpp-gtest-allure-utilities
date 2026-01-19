@@ -9,7 +9,7 @@ namespace systelab::gtest_allure {
 class Allure2Listener final : public ::testing::EmptyTestEventListener
 {
 public:
-    Allure2Listener() = default;
+    Allure2Listener();
     ~Allure2Listener() override = default;
 
     void OnTestStart(const ::testing::TestInfo& testInfo) override;

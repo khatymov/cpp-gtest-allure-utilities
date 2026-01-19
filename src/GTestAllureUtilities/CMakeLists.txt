@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 
+include(GNUInstallDirs)
+
+# Find external dependencies
 find_package(GTest)
 
 add_compile_options(-D RAPIDJSON_HAS_STDSTRING=1)
@@ -27,13 +30,12 @@ target_include_directories(${GTEST_ALLURE_UTILITIES}
         $<INSTALL_INTERFACE:include/GTestAllureUtilities>
 )
 
-
-include(GNUInstallDirs)
-
-install(TARGETS GTestAllureUtilities
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+install(TARGETS ${GTEST_ALLURE_UTILITIES}
+    EXPORT GTestAllureUtilitiesTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION include/GTestAllureUtilities
 )
 
 install(
@@ -54,13 +56,15 @@ install(
         PATTERN "*.h"
 )
 
-install(DIRECTORY src/GTestAllureUtilities/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/GTestAllureUtilities
-  FILES_MATCHING PATTERN "*.h"
+install(
+    EXPORT GTestAllureUtilitiesTargets
+    FILE GTestAllureUtilitiesTargets.cmake
+    NAMESPACE GTestAllureUtilities::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/GTestAllureUtilities
 )
 
 #Configure source groups
-foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR}) 
+foreach(FILE ${GTEST_ALLURE_UTILITIES_SRC} ${GTEST_ALLURE_UTILITIES_HDR})
     get_filename_component(PARENT_DIR "${FILE}" DIRECTORY)
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
     string(REPLACE "/" "\\" GROUP "${GROUP}")

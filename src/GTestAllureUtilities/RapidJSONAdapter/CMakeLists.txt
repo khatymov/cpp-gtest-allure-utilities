@@ -18,6 +18,12 @@ file(GLOB_RECURSE RAPIDJSON_ADAPTER_HDR "*.h")
 add_library(${RAPIDJSON_ADAPTER} STATIC ${RAPIDJSON_ADAPTER_SRC} ${RAPIDJSON_ADAPTER_HDR})
 target_link_libraries(${RAPIDJSON_ADAPTER} rapidjson JSONAdapterInterface)
 
+install(TARGETS ${RAPIDJSON_ADAPTER}
+    EXPORT GTestAllureUtilitiesTargets
+    ARCHIVE DESTINATION lib
+    INCLUDES DESTINATION include/GTestAllureUtilities
+)
+
 #Configure source groups
 foreach(FILE ${RAPIDJSON_ADAPTER_SRC} ${RAPIDJSON_ADAPTER_HDR}) 
     get_filename_component(PARENT_DIR "${FILE}" DIRECTORY)

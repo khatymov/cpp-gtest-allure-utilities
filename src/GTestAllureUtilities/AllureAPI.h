@@ -31,6 +31,11 @@ public:
     std::string value;
   };
 
+  struct Label {
+    std::string name;
+    std::string value;
+  };
+
   struct Step {
     std::string name;
     std::string status;
@@ -70,6 +75,8 @@ public:
   static void setOutputFolder(const std::string &);
   static void setTMSLinksPattern(const std::string &);
   static void setFormat(model::Format format);
+  static void setGenerateLegacyResults(bool enable);
+  static bool getGenerateLegacyResults();
 
   static void setTMSId(const std::string &);
   static void setTestSuiteName(const std::string &);
@@ -86,6 +93,10 @@ public:
   // tags
   static void addTag(const std::string &tag);
   static const std::vector<std::string> &getTags();
+
+  // labels
+  static void addLabel(const std::string &name, const std::string &value);
+  static const std::vector<Label> &getLabels();
 
   // attachments
   static void addAttachment(const std::string &name, const std::string &type,

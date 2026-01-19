@@ -20,8 +20,8 @@ std::string g_tmsPattern;
 std::string g_description;
 std::string g_epic;
 std::string g_severity;
-
 std::map<std::string, std::string> g_suiteLabels;
+bool g_generateLegacyResults = true;
 
 // per-test (thread-local)
 thread_local std::string tl_suite;
@@ -29,9 +29,10 @@ thread_local std::string tl_case;
 thread_local std::string tl_uuid;
 thread_local std::vector<systelab::gtest_allure::AllureAPI::Step> tl_steps;
 thread_local std::vector<std::string> tl_tags;
+thread_local std::vector<systelab::gtest_allure::AllureAPI::Label> tl_labels;
 thread_local std::vector<systelab::gtest_allure::AllureAPI::Attachment> tl_attachments;
 thread_local std::vector<systelab::gtest_allure::AllureAPI::Parameter> tl_parameters;
-
+thread_local systelab::gtest_allure::AllureAPI::Step* tl_activeStep = nullptr;
 
 static long long nowMs() {
   using namespace std::chrono;
@@ -51,11 +52,18 @@ void AllureAPI::beginTestCase(const std::string &suiteName,
                               const std::string &gtestName,
                               const std::string &uuid) {
   tl_steps.clear();
+  tl_tags.clear();
+  tl_labels.clear();
+  tl_attachments.clear();
+  tl_parameters.clear();
+  tl_activeStep = nullptr;
   tl_uuid = uuid;
 
   // suite can be overridden globally by setTestSuiteName if you have it;
   // here we just use what listener passes.
-  tl_suite = suiteName;
+  if (tl_suite.empty()) {
+    tl_suite = suiteName;
+  }
 
   // case name can be overridden by user calling setTestCaseName inside test
   if (tl_case.empty())
@@ -66,7 +74,7 @@ void AllureAPI::endTestCase() {
   tl_case.clear();
   tl_suite.clear();
   tl_uuid.clear();
-  tl_steps.clear();
+  // Steps/tags are cleared at beginTestCase so Allure2Listener can read them.
 }
 
 std::unique_ptr<::testing::TestEventListener> AllureAPI::buildListener() {
@@ -99,6 +107,16 @@ void AllureAPI::setFormat(model::Format format) {
   m_testProgram.setFormat(format);
 }
 
+void AllureAPI::setGenerateLegacyResults(bool enable) {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  g_generateLegacyResults = enable;
+}
+
+bool AllureAPI::getGenerateLegacyResults() {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  return g_generateLegacyResults;
+}
+
 void AllureAPI::setTMSId(const std::string &value) {
   {
     std::lock_guard<std::mutex> lk(g_mutex);
@@ -111,11 +129,12 @@ void AllureAPI::setTMSId(const std::string &value) {
 }
 
 void AllureAPI::setTestSuiteName(const std::string &name) {
+  tl_suite = name;
   setTestSuiteLabel(model::test_property::NAME_PROPERTY, name);
 }
 
 void AllureAPI::setTestSuiteDescription(const std::string &description) {
-    {
+  {
     std::lock_guard<std::mutex> lk(g_mutex);
     g_description = description;
   }
@@ -150,11 +169,7 @@ void AllureAPI::setTestSuiteLabel(const std::string &name,
 }
 
 void AllureAPI::setTestCaseName(const std::string &name) {
-  {
-    std::lock_guard<std::mutex> lk(g_mutex);
-    tl_case = name;
-  }
-
+  tl_case = name;
   auto testCasePropertySetter =
       getServicesFactory()->buildTestCasePropertySetter();
   testCasePropertySetter->setProperty(model::test_property::NAME_PROPERTY,
@@ -171,6 +186,25 @@ void AllureAPI::addExpectedResult(const std::string &name,
   addStep(name, false, verificationFunction);
 }
 
+void AllureAPI::addTag(const std::string &tag) {
+  tl_tags.push_back(tag);
+
+  auto *testCase = getRunningTestCase();
+  if (testCase) {
+    testCase->addTag(tag);
+  }
+}
+
+const std::vector<std::string> &AllureAPI::getTags() { return tl_tags; }
+
+void AllureAPI::addLabel(const std::string &name, const std::string &value) {
+  tl_labels.push_back(Label{name, value});
+}
+
+const std::vector<AllureAPI::Label> &AllureAPI::getLabels() {
+  return tl_labels;
+}
+
 void AllureAPI::addStep(const std::string &name, bool isAction,
                         std::function<void()> stepFunction) {
   Step s;
@@ -181,6 +215,7 @@ void AllureAPI::addStep(const std::string &name, bool isAction,
       getServicesFactory()->buildTestStepStartEventHandler();
   stepStartEventHandler->handleTestStepStart(name, isAction);
 
+  tl_activeStep = &s;
   try {
     stepFunction();
 
@@ -199,11 +234,13 @@ void AllureAPI::addStep(const std::string &name, bool isAction,
     // Exceptions inside steps -> "broken" in Allure terms
     s.status = "broken";
     s.stopMs = nowMs();
+    tl_activeStep = nullptr;
     tl_steps.push_back(std::move(s));
     throw;
   }
 
   s.stopMs = nowMs();
+  tl_activeStep = nullptr;
   tl_steps.push_back(std::move(s));
 }
 
@@ -214,18 +251,11 @@ std::string AllureAPI::getOutputFolder() {
 
 std::string AllureAPI::getCurrentTestSuiteName() { return tl_suite; }
 
-std::string AllureAPI::getCurrentTestCaseName() { 
-  return tl_case; 
-}
+std::string AllureAPI::getCurrentTestCaseName() { return tl_case; }
 
 std::string AllureAPI::getTMSId() {
   std::lock_guard<std::mutex> lk(g_mutex);
   return g_tmsId;
-}
-
-std::string AllureAPI::getDescription() {
-  std::lock_guard<std::mutex> lk(g_mutex);
-  return g_description;
 }
 
 std::string AllureAPI::getTestSuiteEpic() {
@@ -238,11 +268,44 @@ std::string AllureAPI::getTestSuiteSeverity() {
   return g_severity;
 }
 
+std::string AllureAPI::getDescription() {
+  std::lock_guard<std::mutex> lk(g_mutex);
+  return g_description;
+}
+
 const std::map<std::string, std::string> &AllureAPI::getTestSuiteLabels() {
   return g_suiteLabels;
 }
 
 const std::vector<AllureAPI::Step> &AllureAPI::getSteps() { return tl_steps; }
+
+void AllureAPI::addAttachment(const std::string &name, const std::string &type,
+                              const std::string &filePath) {
+  Attachment attachment{name, filePath, type};
+  if (tl_activeStep) {
+    tl_activeStep->attachments.push_back(std::move(attachment));
+  } else {
+    tl_attachments.push_back(std::move(attachment));
+  }
+}
+
+const std::vector<AllureAPI::Attachment> &AllureAPI::getAttachments() {
+  return tl_attachments;
+}
+
+void AllureAPI::addParameter(const std::string &name,
+                             const std::string &value) {
+  Parameter parameter{name, value};
+  if (tl_activeStep) {
+    tl_activeStep->parameters.push_back(std::move(parameter));
+  } else {
+    tl_parameters.push_back(std::move(parameter));
+  }
+}
+
+const std::vector<AllureAPI::Parameter> &AllureAPI::getParameters() {
+  return tl_parameters;
+}
 
 std::string AllureAPI::formatTMSLink(const std::string &tmsId) {
   std::lock_guard<std::mutex> lk(g_mutex);
@@ -257,29 +320,6 @@ std::string AllureAPI::formatTMSLink(const std::string &tmsId) {
   return g_tmsPattern.substr(0, pos) + tmsId +
          g_tmsPattern.substr(pos + needle.size());
 }
-void AllureAPI::addTag(const std::string& tag) {
-  tl_tags.push_back(tag);
-}
-
-const std::vector<std::string>& AllureAPI::getTags() {
-  return tl_tags;
-}
-
-void AllureAPI::addAttachment(const std::string& name, const std::string& source, const std::string& type) {
-  tl_attachments.push_back(Attachment{name, source, type});
-}
-
-const std::vector<AllureAPI::Attachment>& AllureAPI::getAttachments() {
-  return tl_attachments;
-}
-
-void AllureAPI::addParameter(const std::string& name, const std::string& value) {
-  tl_parameters.push_back(Parameter{name, value});
-}
-
-const std::vector<AllureAPI::Parameter>& AllureAPI::getParameters() {
-  return tl_parameters;
-}
 
 service::IServicesFactory *AllureAPI::getServicesFactory() {
   auto configuredServicesFactoryInstance =
@@ -289,6 +329,25 @@ service::IServicesFactory *AllureAPI::getServicesFactory() {
   } else {
     return m_servicesFactory;
   }
+}
+
+model::TestCase *AllureAPI::getRunningTestCase() {
+  unsigned int nTestSuites =
+      static_cast<unsigned int>(m_testProgram.getTestSuitesCount());
+  for (unsigned int i = 0; i < nTestSuites; i++) {
+    model::TestSuite &testSuite = m_testProgram.getTestSuite(i);
+    if (testSuite.getStage() != model::Stage::RUNNING) {
+      continue;
+    }
+
+    for (model::TestCase &testCase : testSuite.getTestCases()) {
+      if (testCase.getStage() == model::Stage::RUNNING) {
+        return &testCase;
+      }
+    }
+  }
+
+  return nullptr;
 }
 
 } // namespace gtest_allure
